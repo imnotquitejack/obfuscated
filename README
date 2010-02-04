@@ -1,0 +1,17 @@
+Obfuscated
+==============
+
+Obfuscated allows you to obfuscate the primary keys of your ActiveRecord models
+which use autoincrementing integer ids.
+
+
+Example
+=======
+
+@user = User.first
+@user.hashed_id
+# "9b46a2e8c9db"
+@same_user = User.find_by_hashed_id( "9b46a2e8c9db" )
+
+
+Copyright (c) 2008 Jon Collier, released under the MIT license

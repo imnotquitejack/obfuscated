@@ -27,11 +27,11 @@ module Obfuscated
           # If Obfuscated isn't supported, use ActiveRecord's default finder
           return find_by_id(hash, options) unless Obfuscated::supported?
           
-          #Update the options to use the hash calculation
+          # Update the conditions to use the hash calculation
           options.update(:conditions => ["SUBSTRING(SHA1(CONCAT('---',#{self.table_name}.id,'-WICKED-#{self.table_name}-')),1,12) = ?", hash])
           
           # Find it!
-          first(options)
+          first(options) or raise ActiveRecord::RecordNotFound, "Couldn't find #{self.class.to_s} with Hashed ID=#{hash}"
         end
 
       end

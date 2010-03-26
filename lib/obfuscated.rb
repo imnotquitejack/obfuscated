@@ -50,6 +50,11 @@ module Obfuscated
       # Use SHA1 to generate a consistent hash based on the id and the table name
       Digest::SHA1.hexdigest("---#{id}-WICKED-#{self.class.table_name}-")[0..11]  
     end
+
+    def to_param
+      hashed_id
+    end
+
   end
   
 end

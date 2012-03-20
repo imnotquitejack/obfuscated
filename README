@@ -2,15 +2,25 @@ Obfuscated
 ==============
 
 Obfuscated allows you to obfuscate the primary keys of your ActiveRecord models
-which use autoincrementing integer ids.
+which use autoincrementing integer ids. Currently only works with MySQL.
 
+Just add "obfuscated" to your Gemfile!
 
 Example
 =======
 
+class User < ActiveRecord::Base
+  has_obfuscated_id
+end
+
 @user = User.first
+@user.id
+# 1
 @user.hashed_id
 # "9b46a2e8c9db"
+@user.to_param
+# "9b46a2e8c9db"
+
 @same_user = User.find_by_hashed_id( "9b46a2e8c9db" )
 
 

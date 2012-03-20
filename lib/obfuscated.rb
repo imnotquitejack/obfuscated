@@ -2,15 +2,14 @@ require 'digest/sha1'
 require 'active_record'
 
 module Obfuscated
-  @@mysql_support = ActiveRecord::Base.connection.class.to_s.downcase.include?('mysql') ? true : false
-  
+ 
   def self.append_features(base)
     super
     base.extend(ClassMethods)
   end
   
   def self.supported?
-    @@mysql_support
+    @@mysql_support ||= ActiveRecord::Base.connection.class.to_s.downcase.include?('mysql') ? true : false
   end
   
   module ClassMethods
@@ -48,7 +47,9 @@ module Obfuscated
       return id unless Obfuscated::supported?
       
       # Use SHA1 to generate a consistent hash based on the id and the table name
-      Digest::SHA1.hexdigest("---#{id}-WICKED-#{self.class.table_name}-")[0..11]  
+      @hashed_id ||= Digest::SHA1.hexdigest(
+        "---#{id}-WICKED-#{self.class.table_name}-"
+      )[0..11]  
     end
 
     def to_param
@@ -57,4 +58,8 @@ module Obfuscated
 
   end
   
+end
+
+ActiveRecord::Base.class_eval do
+  include Obfuscated
 end

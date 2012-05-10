@@ -24,4 +24,9 @@ end
 @same_user = User.find_by_hashed_id( "9b46a2e8c9db" )
 
 
+Configuration
+=======
+Set a salt for your app by adding initializers/obfuscated.rb:
+ Obfuscated.salt = 'somerandomstringofcharacters'
+
 Copyright (c) 2008 Jon Collier, released under the MIT license

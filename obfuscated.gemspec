@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name        = 'obfuscated'
-  s.version     = '0.1.1'
-  s.date        = '2012-03-20'
+  s.version     = '0.1.4'
+  s.date        = '2012-05-10'
   s.summary     = "Primary Key Obfuscation"
   s.description = "Obfuscate your autoincrementing primary key ids."
   s.authors     = ["Jon Collier"]

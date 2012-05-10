@@ -2,7 +2,8 @@ require 'digest/sha1'
 require 'active_record'
 
 module Obfuscated
- 
+  mattr_accessor :salt
+
   def self.append_features(base)
     super
     base.extend(ClassMethods)
@@ -27,7 +28,7 @@ module Obfuscated
           return find_by_id(hash, options) unless Obfuscated::supported?
           
           # Update the conditions to use the hash calculation
-          options.update(:conditions => ["SUBSTRING(SHA1(CONCAT('---',#{self.table_name}.id,'-WICKED-#{self.table_name}-')),1,12) = ?", hash])
+          options.update(:conditions => ["SUBSTRING(SHA1(CONCAT('---',#{self.table_name}.id,'-WICKED-#{self.table_name}-#{Obfuscated::salt}')),1,12) = ?", hash])
           
           # Find it!
           first(options) or raise ActiveRecord::RecordNotFound, "Couldn't find #{self.class.to_s} with Hashed ID=#{hash}"
@@ -48,7 +49,7 @@ module Obfuscated
       
       # Use SHA1 to generate a consistent hash based on the id and the table name
       @hashed_id ||= Digest::SHA1.hexdigest(
-        "---#{id}-WICKED-#{self.class.table_name}-"
+        "---#{id}-WICKED-#{self.class.table_name}-#{Obfuscated::salt}"
       )[0..11]  
     end
 

@@ -28,6 +28,9 @@ pass a 12 digit string to find() :
 @same_user = User.find( "9b46a2e8c9db" )
 @same_user = User.find( 1 )
 
+As of 0.1.6, ActiveRelations also work:
+User.includes(:posts).find( "9b46a2e8c9db" )
+
 
 Configuration
 =======

@@ -6,13 +6,26 @@ module Obfuscated
 
   def self.append_features(base)
     super
-    base.extend(ClassMethods)
+    base.extend(ClassMethods) if base.to_s == 'ActiveRecord::Base'
+    base.extend(Finder) 
   end
   
   def self.supported?
     @@mysql_support ||= ActiveRecord::Base.connection.class.to_s.downcase.include?('mysql') ? true : false
   end
   
+  module Finder
+    def find( *primary_key )
+      if primary_key.is_a?(String) && primary_key.length == 12
+        find_by_hashed_id( primary_key )
+      elsif primary_key.is_a?(Array) && primary_key.length == 1 && primary_key[0].is_a?(String) && primary_key[0].length == 12
+        find_by_hashed_id( primary_key[0] )
+      else
+        super
+      end
+    end
+  end
+
   module ClassMethods
     def has_obfuscated_id( options={} )
       class_eval do
@@ -33,18 +46,9 @@ module Obfuscated
           # Find it!
           first(options) or raise ActiveRecord::RecordNotFound, "Couldn't find #{self.class.to_s} with Hashed ID=#{hash}"
         end
-
       end
     end
 
-    def find( primary_key )
-      if primary_key.is_a?(String) && primary_key.length == 12
-        find_by_hashed_id( primary_key )
-      else
-        super
-      end
-    end
-    
   end
   
   module InstanceMethods
@@ -64,11 +68,11 @@ module Obfuscated
     def to_param
       hashed_id
     end
-
   end
-  
 end
 
-ActiveRecord::Base.class_eval do
-  include Obfuscated
-end
+ActiveRecord::Base.class_eval { include Obfuscated }
+
+# ActiveRelation also needs to get hacked to enable queries like:
+# Sale.includes(:store).find( '7e2d2c4da1b0' )
+ActiveRecord::Relation.class_eval { include Obfuscated::Finder }

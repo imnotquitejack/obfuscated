@@ -22,6 +22,9 @@ end
 # "9b46a2e8c9db"
 
 @same_user = User.find_by_hashed_id( "9b46a2e8c9db" )
+
+Obfuscated will try to find the record using its obfuscated id when you
+pass a 12 digit string to find() :
 @same_user = User.find( "9b46a2e8c9db" )
 @same_user = User.find( 1 )
 

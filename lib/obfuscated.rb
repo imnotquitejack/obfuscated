@@ -36,6 +36,14 @@ module Obfuscated
 
       end
     end
+
+    def find( primary_key )
+      if primary_key.is_a?(String) && primary_key.length == 12
+        find_by_hashed_id( primary_key )
+      else
+        super
+      end
+    end
     
   end
   

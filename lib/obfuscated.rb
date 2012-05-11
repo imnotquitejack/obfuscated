@@ -6,7 +6,7 @@ module Obfuscated
 
   def self.append_features(base)
     super
-    base.extend(ClassMethods) if base.to_s == 'ActiveRecord::Base'
+    base.extend(ClassMethods)
     base.extend(Finder) 
   end
   
@@ -16,10 +16,15 @@ module Obfuscated
   
   module Finder
     def find( *primary_key )
+      # Sale.find( '7e2d2c4da1b0' )
       if primary_key.is_a?(String) && primary_key.length == 12
         find_by_hashed_id( primary_key )
+
+      # Sale.includes(:store).find( '7e2d2c4da1b0' )
       elsif primary_key.is_a?(Array) && primary_key.length == 1 && primary_key[0].is_a?(String) && primary_key[0].length == 12
         find_by_hashed_id( primary_key[0] )
+
+      # Other queries
       else
         super
       end
@@ -72,7 +77,3 @@ module Obfuscated
 end
 
 ActiveRecord::Base.class_eval { include Obfuscated }
-
-# ActiveRelation also needs to get hacked to enable queries like:
-# Sale.includes(:store).find( '7e2d2c4da1b0' )
-ActiveRecord::Relation.class_eval { include Obfuscated::Finder }

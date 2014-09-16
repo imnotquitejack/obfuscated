@@ -7,12 +7,11 @@ module Obfuscated
   def self.append_features(base)
     super
     base.extend(ClassMethods)
-    base.extend(Finder) 
+    base.extend(Finder)
   end
-  
+
   def self.supported?
-    db = ActiveRecord::Base.connection.class.to_s.downcase
-    @@db_support ||= db.include?('mysql') || db.include?('postgresql') ? true : false
+    @@mysql_support ||= ActiveRecord::Base.connection.class.to_s.downcase.include?('mysql') ? true : false
   end
 
   module Finder
@@ -42,35 +41,38 @@ module Obfuscated
         def self.find_by_hashed_id( hash, options={} )
           # Don't bother if there's no hash provided.
           return nil if hash.blank?
-          
+
           # If Obfuscated isn't supported, use ActiveRecord's default finder
           return find_by_id(hash, options) unless Obfuscated::supported?
-          
+
           # Update the conditions to use the hash calculation
-          db = ActiveRecord::Base.connection.class.to_s.downcase
-          if db.include?('postgresql')
-            options.update(:conditions => ["substring(encode(digest(concat('---',id::text,'-WICKED-#{self.table_name}-#{Obfuscated::salt}'), 'sha1'), 'hex'), 1, 12) = ?", hash])
-          elsif db.include?('mysql')
-            options.update(:conditions => ["SUBSTRING(SHA1(CONCAT('---',#{self.table_name}.id,'-WICKED-#{self.table_name}-#{Obfuscated::salt}')),1,12) = ?", hash])
-          end
+          sql = "SUBSTRING(SHA1(CONCAT('---',#{self.table_name}.id,'-WICKED-#{self.table_name}-#{Obfuscated::salt}')),1,12) = ?"
+          options.update(:conditions => [sql, hash])
+
           # Find it!
-          first(options) or raise ActiveRecord::RecordNotFound, "Couldn't find #{self.class.to_s} with Hashed ID=#{hash}"
+          begin
+            first(options) or raise ActiveRecord::RecordNotFound, "Couldn't find #{self.class.to_s} with Hashed ID=#{hash}"
+          rescue ArgumentError
+            find_by(sql, hash)
+          end
         end
       end
     end
-# select substring(encode(digest(concat('---',to_char(id),'-WICKED-clouds-abc123'), 'sha1'), 'hex'), 1, 12) from clouds
+
   end
-  
+
   module InstanceMethods
     # Generate an obfuscated 12 character id incorporating the primary key and the table name.
     def hashed_id
       raise 'This record does not have a primary key yet!' if id.blank?
-      
+
       # If Obfuscated isn't supported, just return the normal id
       return id unless Obfuscated::supported?
-      
+
       # Use SHA1 to generate a consistent hash based on the id and the table name
-      @hashed_id ||= Digest::SHA1.hexdigest("---#{id}-WICKED-#{self.class.table_name}-#{Obfuscated::salt}")[0..11]
+      @hashed_id ||= Digest::SHA1.hexdigest(
+        "---#{id}-WICKED-#{self.class.table_name}-#{Obfuscated::salt}"
+      )[0..11]
     end
 
     def to_param

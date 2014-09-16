@@ -53,7 +53,7 @@ module Obfuscated
           begin
             first(options) or raise ActiveRecord::RecordNotFound, "Couldn't find #{self.class.to_s} with Hashed ID=#{hash}"
           rescue ArgumentError
-            first(sql, hash)
+            find_by(sql, hash)
           end
         end
       end
